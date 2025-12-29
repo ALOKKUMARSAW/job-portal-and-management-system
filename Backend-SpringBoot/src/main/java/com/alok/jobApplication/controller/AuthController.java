@@ -13,6 +13,8 @@ import org.springframework.web.bind.annotation.RestController;
 
 import com.alok.jobApplication.model.AppUser;
 import com.alok.jobApplication.repo.UserRepo;
+import com.alok.jobApplication.util.JwtUtil;
+import com.alok.jobApplication.enums.Role;
 
 import lombok.Data;
 
@@ -24,31 +26,48 @@ public class AuthController {
     @Autowired
     private UserRepo userRepo;
 
+    @Autowired
+    private JwtUtil jwtUtil;
+
     @PostMapping("/register")
     public ResponseEntity<?> register(@RequestBody RegisterRequest request) {
-        if (request.getName() == null || request.getName().isBlank()
+        System.out.println("=== REGISTER ENDPOINT CALLED ===");
+        System.out.println("Request method: POST");
+        System.out.println("Request path: /auth/register");
+        try {
+            System.out.println("Registration request received: " + request);
+            
+            if (request.getName() == null || request.getName().isBlank()
                 || request.getEmail() == null || request.getEmail().isBlank()
                 || request.getPassword() == null || request.getPassword().isBlank()
-                || request.getRole() == null || request.getRole().isBlank()) {
+                || request.getRole() == null) {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST)
                     .body(new ErrorResponse("Name, email, password and role are required"));
         }
 
-        Optional<AppUser> existing = userRepo.findByEmail(request.getEmail());
-        if (existing.isPresent()) {
-            return ResponseEntity.status(HttpStatus.CONFLICT)
-                    .body(new ErrorResponse("Email already exists"));
+            Optional<AppUser> existing = userRepo.findByEmail(request.getEmail());
+            if (existing.isPresent()) {
+                return ResponseEntity.status(HttpStatus.CONFLICT)
+                        .body(new ErrorResponse("Email already exists"));
+            }
+
+            String role = request.getRole() == Role.ADMIN ? "ADMIN" : "USER";
+
+            // NOTE: For simplicity, password is stored as plain text.
+            // In production, ALWAYS hash passwords (e.g. BCrypt).
+            AppUser user = new AppUser(null, request.getName(), request.getEmail(), request.getPassword(), role);
+            AppUser saved = userRepo.save(user);
+            
+            System.out.println("User saved successfully: " + saved);
+
+            AuthResponse response = new AuthResponse(saved.getId(), saved.getName(), saved.getEmail(), saved.getRole(), null);
+            return ResponseEntity.ok(response);
+        } catch (Exception e) {
+            System.err.println("Registration error: " + e.getMessage());
+            e.printStackTrace();
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(new ErrorResponse("Registration failed: " + e.getMessage()));
         }
-
-        String role = request.getRole().equalsIgnoreCase("ADMIN") ? "ADMIN" : "USER";
-
-        // NOTE: For simplicity, password is stored as plain text.
-        // In production, ALWAYS hash passwords (e.g. BCrypt).
-        AppUser user = new AppUser(null, request.getName(), request.getEmail(), request.getPassword(), role);
-        AppUser saved = userRepo.save(user);
-
-        AuthResponse response = new AuthResponse(saved.getId(), saved.getName(), saved.getEmail(), saved.getRole());
-        return ResponseEntity.ok(response);
     }
 
     @PostMapping("/login")
@@ -65,7 +84,8 @@ public class AuthController {
                     .body(new ErrorResponse("Invalid email or password"));
         }
 
-        AuthResponse response = new AuthResponse(user.getId(), user.getName(), user.getEmail(), user.getRole());
+        String token = jwtUtil.generateToken(user.getId(), user.getEmail(), user.getRole());
+        AuthResponse response = new AuthResponse(user.getId(), user.getName(), user.getEmail(), user.getRole(), token);
         return ResponseEntity.ok(response);
     }
 
@@ -75,9 +95,9 @@ public class AuthController {
         private String email;
         private String password;
         /**
-         * "USER" or "ADMIN"
+         * USER or ADMIN
          */
-        private String role;
+        private Role role;
     }
 
     @Data
@@ -92,12 +112,14 @@ public class AuthController {
         private String name;
         private String email;
         private String role;
+        private String token;
 
-        public AuthResponse(Long id, String name, String email, String role) {
+        public AuthResponse(Long id, String name, String email, String role, String token) {
             this.id = id;
             this.name = name;
             this.email = email;
             this.role = role;
+            this.token = token;
         }
     }
 

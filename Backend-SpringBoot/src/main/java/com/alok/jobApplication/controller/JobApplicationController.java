@@ -7,13 +7,14 @@ import java.util.Optional;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
@@ -44,27 +45,25 @@ public class JobApplicationController {
      * User: apply to a job
      */
     @PostMapping("/jobPost/{postId}/apply")
-    public ResponseEntity<?> applyToJob(@PathVariable int postId,
-                                        @RequestHeader(value = "X-User-Id", required = false) String userIdHeader) {
-
-        if (userIdHeader == null || userIdHeader.isBlank()) {
+    public ResponseEntity<?> applyToJob(@PathVariable int postId) {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        if (authentication == null || !authentication.isAuthenticated()) {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
-                    .body(new ErrorResponse("User ID is required"));
+                    .body(new ErrorResponse("Authentication required"));
         }
 
-        try {
-            Long userId = Long.parseLong(userIdHeader);
-            Optional<AppUser> userOpt = userRepo.findById(userId);
-            if (userOpt.isEmpty()) {
-                return ResponseEntity.status(HttpStatus.NOT_FOUND)
-                        .body(new ErrorResponse("User not found"));
-            }
+        String userEmail = authentication.getName();
+        Optional<AppUser> userOpt = userRepo.findByEmail(userEmail);
+        if (userOpt.isEmpty()) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                    .body(new ErrorResponse("User not found"));
+        }
 
-            AppUser user = userOpt.get();
-            if (!user.getRole().equalsIgnoreCase("USER") && !user.getRole().equalsIgnoreCase("ADMIN")) {
-                return ResponseEntity.status(HttpStatus.FORBIDDEN)
-                        .body(new ErrorResponse("Only users can apply to jobs"));
-            }
+        AppUser user = userOpt.get();
+        if (!user.getRole().equalsIgnoreCase("USER") && !user.getRole().equalsIgnoreCase("ADMIN")) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN)
+                    .body(new ErrorResponse("Only users can apply to jobs"));
+        }
 
             Optional<JobPost> jobOpt = jobRepo.findById(postId);
             if (jobOpt.isEmpty()) {
@@ -92,18 +91,16 @@ public class JobApplicationController {
 
             JobApplication saved = applicationRepo.save(application);
             return ResponseEntity.ok(saved);
-        } catch (NumberFormatException e) {
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
-                    .body(new ErrorResponse("Invalid user ID format"));
-        }
     }
 
     /**
      * Admin: view all applications
      */
     @GetMapping("/applications")
-    public ResponseEntity<?> getAllApplications(@RequestHeader(value = "X-ROLE", required = false) String roleHeader) {
-        if (roleHeader == null || !roleHeader.equalsIgnoreCase("ADMIN")) {
+    public ResponseEntity<?> getAllApplications() {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        if (authentication == null || !authentication.getAuthorities().stream()
+                .anyMatch(auth -> auth.getAuthority().equals("ROLE_ADMIN"))) {
             return ResponseEntity.status(HttpStatus.FORBIDDEN).body("Only ADMIN can view applications");
         }
         List<JobApplication> list = applicationRepo.findAll();
@@ -114,9 +111,10 @@ public class JobApplicationController {
      * Admin: view applications for a specific job
      */
     @GetMapping("/jobPost/{postId}/applications")
-    public ResponseEntity<?> getApplicationsForJob(@PathVariable int postId,
-                                                   @RequestHeader(value = "X-ROLE", required = false) String roleHeader) {
-        if (roleHeader == null || !roleHeader.equalsIgnoreCase("ADMIN")) {
+    public ResponseEntity<?> getApplicationsForJob(@PathVariable int postId) {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        if (authentication == null || !authentication.getAuthorities().stream()
+                .anyMatch(auth -> auth.getAuthority().equals("ROLE_ADMIN"))) {
             return ResponseEntity.status(HttpStatus.FORBIDDEN).body("Only ADMIN can view applications");
         }
         List<JobApplication> list = applicationRepo.findByJobPostPostId(postId);
@@ -128,9 +126,10 @@ public class JobApplicationController {
      */
     @PutMapping("/applications/{id}/status")
     public ResponseEntity<?> updateStatus(@PathVariable Long id,
-                                          @RequestBody UpdateStatusRequest request,
-                                          @RequestHeader(value = "X-ROLE", required = false) String roleHeader) {
-        if (roleHeader == null || !roleHeader.equalsIgnoreCase("ADMIN")) {
+                                          @RequestBody UpdateStatusRequest request) {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        if (authentication == null || !authentication.getAuthorities().stream()
+                .anyMatch(auth -> auth.getAuthority().equals("ROLE_ADMIN"))) {
             return ResponseEntity.status(HttpStatus.FORBIDDEN).body("Only ADMIN can update application status");
         }
 
