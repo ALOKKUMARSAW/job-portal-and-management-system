@@ -141,7 +141,7 @@ const handleEdit = (id) => {
               // If not JSON, keep defaults
             }
 
-            // Calculate 24-hour countdown timer
+            // Calculate 24-hour countdown timer and check if registration should close
             const getCountdown = (deadline) => {
               if (!deadline) return null;
               try {
@@ -161,7 +161,25 @@ const handleEdit = (id) => {
               }
             };
 
+            // Check if registration deadline has passed and update status
+            const checkAndUpdateRegistrationStatus = (deadline, currentStatus) => {
+              if (!deadline) return currentStatus;
+              try {
+                const deadlineDate = new Date(deadline);
+                const now = new Date();
+                
+                // If deadline has passed and status is still "Reg. Open", close it
+                if (now >= deadlineDate && currentStatus === 'Reg. Open') {
+                  return 'Reg. Closed';
+                }
+                return currentStatus;
+              } catch (e) {
+                return currentStatus;
+              }
+            };
+
             const countdown = getCountdown(registrationDeadline);
+            const updatedRegistrationStatus = checkAndUpdateRegistrationStatus(registrationDeadline, registrationStatus);
 
             // Get status badge color
             const getStatusColor = (status) => {
@@ -171,7 +189,7 @@ const handleEdit = (id) => {
               return { bg: '#e8f5e9', color: '#2e7d32', dot: '#4caf50' };
             };
 
-            const statusColors = getStatusColor(registrationStatus);
+            const statusColors = getStatusColor(updatedRegistrationStatus);
 
             // Get application status icon and text
             const getApplicationStatus = (status) => {
@@ -300,7 +318,7 @@ const handleEdit = (id) => {
                     {/* Status Badge and Action Icons */}
                     <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: 1 }}>
                       <Chip
-                        label={registrationStatus}
+                        label={updatedRegistrationStatus}
                         size="small"
                         sx={{
                           height: 24,
@@ -411,7 +429,7 @@ const handleEdit = (id) => {
                   )}
 
                   {/* Countdown Timer */}
-                  {countdown && registrationStatus === 'Reg. Open' && (
+                  {countdown && updatedRegistrationStatus === 'Reg. Open' && (
                     <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5, mb: 1.5 }}>
                       <AccessTimeIcon sx={{ color: '#757575', fontSize: 16 }} />
                       <Typography

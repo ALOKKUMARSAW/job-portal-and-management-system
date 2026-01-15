@@ -30,7 +30,7 @@ export const AuthProvider = ({ children }) => {
 
   const login = async (email, password) => {
     try {
-      const response = await axios.post('http://localhost:8080/auth/login', {
+      const response = await axios.post(`${process.env.REACT_APP_API_URL || 'http://localhost:8080'}/auth/login`, {
         email,
         password
       });
@@ -48,7 +48,7 @@ export const AuthProvider = ({ children }) => {
 
   const register = async (name, email, password, role = 'USER') => {
     try {
-      const response = await axios.post('http://localhost:8080/auth/register', {
+      const response = await axios.post(`${process.env.REACT_APP_API_URL || 'http://localhost:8080'}/auth/register`, {
         name,
         email,
         password,

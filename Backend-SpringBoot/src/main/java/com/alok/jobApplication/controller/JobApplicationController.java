@@ -24,6 +24,7 @@ import com.alok.jobApplication.model.JobPost;
 import com.alok.jobApplication.repo.JobApplicationRepo;
 import com.alok.jobApplication.repo.JobRepo;
 import com.alok.jobApplication.repo.UserRepo;
+import com.alok.jobApplication.service.EmailService;
 
 import lombok.Data;
 
@@ -41,12 +42,15 @@ public class JobApplicationController {
     @Autowired
     private UserRepo userRepo;
 
+    @Autowired
+    private EmailService emailService;
+
     /**
      * User: apply to a job
      */
     @PostMapping("/jobPost/{postId}/apply")
     public ResponseEntity<?> applyToJob(@PathVariable int postId) {
-        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();        
         if (authentication == null || !authentication.isAuthenticated()) {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
                     .body(new ErrorResponse("Authentication required"));
@@ -54,6 +58,7 @@ public class JobApplicationController {
 
         String userEmail = authentication.getName();
         Optional<AppUser> userOpt = userRepo.findByEmail(userEmail);
+        
         if (userOpt.isEmpty()) {
             return ResponseEntity.status(HttpStatus.NOT_FOUND)
                     .body(new ErrorResponse("User not found"));
@@ -90,6 +95,20 @@ public class JobApplicationController {
             application.setAppliedAt(LocalDateTime.now());
 
             JobApplication saved = applicationRepo.save(application);
+            
+            // Send email notification to the user
+            try {
+                emailService.sendApplicationSubmittedEmail(
+                    user.getEmail(), 
+                    user.getName(), 
+                    jobPost.getPostProfile(),
+                    jobPost.getCompanyName()
+                );
+            } catch (Exception e) {
+                // Log the error but don't fail the application submission
+                System.err.println("Failed to send email notification: " + e.getMessage());
+            }
+            
             return ResponseEntity.ok(saved);
     }
 

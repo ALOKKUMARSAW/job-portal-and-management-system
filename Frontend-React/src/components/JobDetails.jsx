@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
-import axios from 'axios';
+import api from '../utils/api';
 import {
   Box,
   Container,
@@ -46,7 +46,7 @@ const JobDetails = () => {
     if (jobId) {
       const fetchJob = async () => {
         try {
-          const response = await axios.get(`http://localhost:8080/jobPost/${jobId}`);
+          const response = await api.get(`/jobPost/${jobId}`);
           setJob(response.data);
           setLoading(false);
         } catch (error) {
@@ -105,11 +105,7 @@ const JobDetails = () => {
     setApplyMessage('');
 
     try {
-      const response = await axios.post(`http://localhost:8080/jobPost/${jobId}/apply`, null, {
-        headers: {
-          'X-User-Id': user.id.toString()
-        }
-      });
+      const response = await api.post(`/jobPost/${jobId}/apply`);
       setApplyMessage('Application submitted successfully!');
       setTimeout(() => {
         navigate('/');

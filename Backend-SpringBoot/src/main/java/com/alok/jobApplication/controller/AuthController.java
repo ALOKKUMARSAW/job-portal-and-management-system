@@ -15,6 +15,7 @@ import com.alok.jobApplication.model.AppUser;
 import com.alok.jobApplication.repo.UserRepo;
 import com.alok.jobApplication.util.JwtUtil;
 import com.alok.jobApplication.enums.Role;
+import org.springframework.security.crypto.password.PasswordEncoder;
 
 import lombok.Data;
 
@@ -28,6 +29,9 @@ public class AuthController {
 
     @Autowired
     private JwtUtil jwtUtil;
+
+    @Autowired
+    private PasswordEncoder passwordEncoder;
 
     @PostMapping("/register")
     public ResponseEntity<?> register(@RequestBody RegisterRequest request) {
@@ -53,9 +57,9 @@ public class AuthController {
 
             String role = request.getRole() == Role.ADMIN ? "ADMIN" : "USER";
 
-            // NOTE: For simplicity, password is stored as plain text.
-            // In production, ALWAYS hash passwords (e.g. BCrypt).
-            AppUser user = new AppUser(null, request.getName(), request.getEmail(), request.getPassword(), role);
+            // Hash the password before storing
+            String encodedPassword = passwordEncoder.encode(request.getPassword());
+            AppUser user = new AppUser(null, request.getName(), request.getEmail(), encodedPassword, role);
             AppUser saved = userRepo.save(user);
             
             System.out.println("User saved successfully: " + saved);
@@ -79,7 +83,7 @@ public class AuthController {
         }
 
         AppUser user = existing.get();
-        if (!user.getPassword().equals(request.getPassword())) {
+        if (!passwordEncoder.matches(request.getPassword(), user.getPassword())) {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
                     .body(new ErrorResponse("Invalid email or password"));
         }
@@ -90,7 +94,7 @@ public class AuthController {
     }
 
     @Data
-    private static class RegisterRequest {
+    public static class RegisterRequest {
         private String name;
         private String email;
         private String password;
@@ -101,13 +105,13 @@ public class AuthController {
     }
 
     @Data
-    private static class LoginRequest {
+    public static class LoginRequest {
         private String email;
         private String password;
     }
 
     @Data
-    private static class AuthResponse {
+    public static class AuthResponse {
         private Long id;
         private String name;
         private String email;
@@ -124,7 +128,7 @@ public class AuthController {
     }
 
     @Data
-    private static class ErrorResponse {
+    public static class ErrorResponse {
         private String message;
 
         public ErrorResponse(String message) {

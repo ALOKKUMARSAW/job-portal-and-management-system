@@ -1,4 +1,5 @@
 package com.alok.jobApplication.model;
+import java.time.LocalDate;
 import java.util.List;
 
 import org.springframework.stereotype.Component;
@@ -26,7 +27,7 @@ public class JobPost {
 	private List<String> postTechStack;
 	private String postingDate;
 	private String registrationStatus; // "Reg. Open", "Reg. Closed", "In Progress"
-	private String registrationDeadline; // Date for countdown timer
+	private LocalDate registrationDeadline; // Date for countdown timer
 	private String applicationStatus; // "Eligible to Apply", "Not Eligible", "Application Submitted", "Not Shortlisted"
 
 	// Additional fields from the front-end Create form
