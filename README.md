@@ -25,6 +25,9 @@ A full-stack job portal application with User and Admin modules, featuring job p
 - **Language**: Java 21
 - **Database**: MySQL
 - **ORM**: JPA/Hibernate
+- **Security**: Spring Security with JWT
+- **Email**: Spring Boot Mail Starter
+- **Utilities**: Lombok
 - **Package**: `com.alok.jobApplication`
 
 ### Frontend
@@ -32,6 +35,7 @@ A full-stack job portal application with User and Admin modules, featuring job p
 - **UI Library**: Material-UI (MUI) 5.15.0
 - **HTTP Client**: Axios
 - **Routing**: React Router DOM 6.21.0
+- **Animations**: React TSParticles
 
 ## Prerequisites
 
@@ -48,7 +52,7 @@ A full-stack job portal application with User and Admin modules, featuring job p
 CREATE DATABASE jobapp;
 ```
 
-2. Update database credentials in `spring-boot-rest/src/main/resources/application.properties`:
+2. Update database credentials in `Backend-SpringBoot/src/main/resources/application.properties`:
 ```properties
 spring.datasource.url=jdbc:mysql://localhost:3306/jobapp?useSSL=false&allowPublicKeyRetrieval=true
 spring.datasource.username=root
@@ -59,7 +63,7 @@ spring.datasource.password=YOUR_PASSWORD
 
 1. Navigate to the backend directory:
 ```bash
-cd spring-boot-rest
+cd Backend-SpringBoot
 ```
 
 2. Build the project:
@@ -103,7 +107,7 @@ The backend will start on `http://localhost:8080`
 
 1. Navigate to the frontend directory:
 ```bash
-cd React-UI-with-CRUD-master
+cd Frontend-React
 ```
 
 2. Install dependencies:
@@ -145,36 +149,30 @@ You can register new users/admins through the registration page. The first admin
 ## Project Structure
 
 ```
-Job-App-main/
-├── spring-boot-rest/          # Backend (Spring Boot)
+job-portal-and-management-system/
+├── Backend-SpringBoot/          # Backend (Spring Boot)
 │   ├── src/
 │   │   └── main/
 │   │       ├── java/
 │   │       │   └── com/
 │   │       │       └── alok/
 │   │       │           └── jobApplication/
-│   │       │               ├── config/      # CORS configuration
+│   │       │               ├── config/      # CORS and security configuration
 │   │       │               ├── controller/  # REST controllers
+│   │       │               ├── enums/       # Application enums
+│   │       │               ├── filter/      # JWT authentication filter
 │   │       │               ├── model/       # Entity models
-│   │       │               ├── repo/         # JPA repositories
-│   │       │               └── service/     # Business logic
+│   │       │               ├── repo/        # JPA repositories
+│   │       │               ├── service/     # Business logic
+│   │       │               └── util/        # Utility classes
 │   │       └── resources/
 │   │           └── application.properties
 │   └── pom.xml
 │
-└── React-UI-with-CRUD-master/  # Frontend (React)
+└── Frontend-React/              # Frontend (React)
     ├── src/
-    │   ├── components/        # React components
-    │   │   ├── AllPosts.jsx
-    │   │   ├── Create.jsx
-    │   │   ├── Edit.jsx
-    │   │   ├── JobDetails.jsx
-    │   │   ├── Login.jsx
-    │   │   ├── Register.jsx
-    │   │   ├── Navbar.jsx
-    │   │   └── ProtectedRoute.jsx
-    │   ├── context/           # React context
-    │   │   └── AuthContext.js
+    │   ├── components/         # React components
+    │   ├── context/            # React context
     │   └── App.js
     └── package.json
 ```
@@ -182,9 +180,10 @@ Job-App-main/
 ## Key Features Implementation
 
 ### Authentication & Authorization
-- JWT-less session management using localStorage
+- JWT-based authentication using Spring Security
 - Role-based access control (USER/ADMIN)
 - Protected routes for admin-only pages
+- JWT token validation and expiration handling
 
 ### Job Management
 - Full CRUD operations for jobs
@@ -213,9 +212,10 @@ Job-App-main/
 ## Notes
 
 - The application uses JPA `ddl-auto=update` which automatically creates/updates database tables
-- User sessions are stored in browser localStorage
+- JWT tokens are used for authentication and stored in browser localStorage
 - Admin routes are protected and redirect non-admin users
 - Job application requires user to be logged in
+- Email functionality is available for notifications (Spring Boot Mail)
 
 ## License
 
