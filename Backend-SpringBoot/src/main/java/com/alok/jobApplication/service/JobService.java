@@ -54,9 +54,9 @@ public class JobService {
 		
 		
 		// method to add a jobPost
-		public void addJob(JobPost jobPost) {
-			 repo.save(jobPost);
-		
+		@SuppressWarnings("null")
+		public JobPost addJob(JobPost jobPost) {
+			return repo.save(jobPost);
 		}
 
         //method to get job by id
@@ -66,6 +66,7 @@ public class JobService {
 		}
 
         //method to update job with job post object
+		@SuppressWarnings("null")
 		public void updateJob(JobPost jobPost) {
 		repo.save(jobPost);
 			
@@ -80,6 +81,12 @@ public class JobService {
 
 
 		public void load() {
+			// Check if data already exists
+			if (repo.count() > 0) {
+				System.out.println("Job data already exists, skipping load");
+				return;
+			}
+			
 			// arrayList to store store JobPost objects
 			DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd");
 			String today = LocalDate.now().format(formatter);
