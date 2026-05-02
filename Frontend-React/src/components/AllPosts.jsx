@@ -1,7 +1,6 @@
-import React from 'react'
+import React, { useCallback, useEffect, useMemo, useState } from 'react'
 import DeleteIcon from '@mui/icons-material/Delete';
 import EditIcon from '@mui/icons-material/Edit';
-import SearchIcon from '@mui/icons-material/Search';
 import AccessTimeIcon from '@mui/icons-material/AccessTime';
 import LocationOnIcon from '@mui/icons-material/LocationOn';
 import AttachMoneyIcon from '@mui/icons-material/AttachMoney';
@@ -15,8 +14,6 @@ import {
   Box,
     Card,
     Grid,
-    InputAdornment,
-    TextField,
     Typography,
     Container,
     IconButton,
@@ -25,12 +22,19 @@ import {
     Button,
   } from "@mui/material";
   import axios from "axios";
-  import { useEffect, useState } from "react";
 import { useNavigate } from 'react-router-dom';
 
 const AllPosts = () => {
     const [query, setQuery] = useState("");
-    const [post, setPost] = useState(null);
+    const [jobs, setJobs] = useState([]);
+    const [filteredJobs, setFilteredJobs] = useState([]);
+    const [savedJobIds, setSavedJobIds] = useState(() => {
+      const saved = localStorage.getItem('savedJobs');
+      return saved ? JSON.parse(saved) : [];
+    });
+    const [selectedCompany, setSelectedCompany] = useState("");
+    const [selectedLocation, setSelectedLocation] = useState("");
+    const [selectedCategory, setSelectedCategory] = useState("");
     const [currentTime, setCurrentTime] = useState(new Date());
     const navigate = useNavigate();
     const { isAdmin } = useAuth();
@@ -44,88 +48,335 @@ const AllPosts = () => {
         return () => clearInterval(timer);
     }, []);
 
-const handleEdit = (id) => {
-  navigate("/edit",{state:{id}});
-}
+    const handleEdit = (id) => {
+      navigate("/edit",{state:{id}});
+    }
 
     useEffect(() => {
-      const fetchPosts = async () => {
-        const response = await axios.get(`http://localhost:8080/jobPosts/keyword/${query}`);    
-        setPost(response.data);
+      const fetchInitialPosts = async () => {
+        const response = await axios.get(`http://localhost:8080/jobPosts`);
+        setJobs(response.data);
       };
-        const fetchInitialPosts = async () => {
-            const response = await axios.get(`http://localhost:8080/jobPosts`);
-            setPost(response.data);
-        }
-         fetchInitialPosts();
-         if (query.length === 0) fetchInitialPosts();
-         if (query.length > 2) fetchPosts();
-      }, [query]);
+      fetchInitialPosts();
+    }, []);
 
-      const handleDelete = (id) => {
-        if (window.confirm('Are you sure you want to delete this job posting?')) {
-          async function deletePost() {
-            await axios.delete(`http://localhost:8080/jobPost/${id}`);
-          }
-          deletePost();
-          window.location.reload();
+    useEffect(() => {
+      const lowerQuery = query.toLowerCase();
+      const filtered = jobs.filter((job) => {
+        const description = String(job.postDesc || job.postProfile || "").toLowerCase();
+        const techStack = Array.isArray(job.postTechStack) ? job.postTechStack.join(' ').toLowerCase() : '';
+        const location = String(job.jobLocation || '').toLowerCase();
+        const company = String(job.companyName || '').toLowerCase();
+
+        const matchesQuery =
+          lowerQuery.length === 0 ||
+          company.includes(lowerQuery) ||
+          description.includes(lowerQuery) ||
+          techStack.includes(lowerQuery) ||
+          location.includes(lowerQuery);
+
+        const matchesCompany = selectedCompany ? company === selectedCompany.toLowerCase() : true;
+        const matchesLocation = selectedLocation ? location === selectedLocation.toLowerCase() : true;
+        const matchesCategory = selectedCategory ? techStack.includes(selectedCategory.toLowerCase()) : true;
+
+        return matchesQuery && matchesCompany && matchesLocation && matchesCategory;
+      });
+      setFilteredJobs(filtered);
+    }, [jobs, query, selectedCompany, selectedLocation, selectedCategory]);
+
+    const handleDelete = async (id) => {
+      if (window.confirm('Are you sure you want to delete this job posting?')) {
+        try {
+          await axios.delete(`http://localhost:8080/jobPost/${id}`);
+          setJobs((prev) => prev.filter((item) => item.postId !== id));
+        } catch (error) {
+          console.error(error);
+          alert('Failed to delete the job posting. Please try again.');
         }
       }
+    }
+
+    const parseStructuredDesc = useCallback((job) => {
+      if (!job?.postDesc) return {};
+      try {
+        return JSON.parse(job.postDesc);
+      } catch {
+        return {};
+      }
+    }, []);
+
+    const extractJobLocation = useCallback((job) => {
+      const parsed = parseStructuredDesc(job);
+      return job.jobLocation || parsed.jobLocation || '';
+    }, [parseStructuredDesc]);
+
+    const extractSalary = (job) => {
+      const parsed = parseStructuredDesc(job);
+      return parsed.salaryDetails ? parsed.salaryDetails.split('\n')[0] : '';
+    };
+
+    const topCompanies = useMemo(() => {
+      const counts = jobs.reduce((acc, job) => {
+        const company = String(job.companyName || 'Unknown').trim();
+        if (!company) return acc;
+        acc[company] = (acc[company] || 0) + 1;
+        return acc;
+      }, {});
+      return Object.entries(counts)
+        .sort((a, b) => b[1] - a[1])
+        .slice(0, 6)
+        .map(([company]) => company);
+    }, [jobs]);
+
+    const topLocations = useMemo(() => {
+      const counts = jobs.reduce((acc, job) => {
+        const location = extractJobLocation(job).trim() || 'Remote';
+        acc[location] = (acc[location] || 0) + 1;
+        return acc;
+      }, {});
+      return Object.entries(counts)
+        .sort((a, b) => b[1] - a[1])
+        .slice(0, 6)
+        .map(([location]) => location);
+    }, [jobs, extractJobLocation]);
+
+    const topCategories = useMemo(() => {
+      const counts = jobs.reduce((acc, job) => {
+        const techStack = Array.isArray(job.postTechStack)
+          ? job.postTechStack
+          : String(parseStructuredDesc(job).technology || '').split(',').map((item) => item.trim()).filter(Boolean);
+        techStack.forEach((tag) => {
+          if (!tag) return;
+          acc[tag] = (acc[tag] || 0) + 1;
+        });
+        return acc;
+      }, {});
+      return Object.entries(counts)
+        .sort((a, b) => b[1] - a[1])
+        .slice(0, 8)
+        .map(([tag]) => tag);
+    }, [jobs, parseStructuredDesc]);
+
+    const featuredJobs = useMemo(() => {
+      return jobs
+        .filter((job) => job.registrationStatus === 'Reg. Open')
+        .sort((a, b) => new Date(b.postingDate || 0) - new Date(a.postingDate || 0))
+        .slice(0, 3);
+    }, [jobs]);
+
+    const savedJobs = useMemo(() => {
+      return jobs.filter((job) => savedJobIds.includes(job.postId));
+    }, [jobs, savedJobIds]);
+
+    const isSaved = (id) => savedJobIds.includes(id);
+
+    const toggleSaveJob = (id) => {
+      setSavedJobIds((prev) => {
+        const next = prev.includes(id) ? prev.filter((item) => item !== id) : [...prev, id];
+        localStorage.setItem('savedJobs', JSON.stringify(next));
+        return next;
+      });
+    };
 
   return (
     <Container maxWidth="xl" sx={{ py: 4 }}>
-      <Box sx={{ mb: 4, animation: 'fadeIn 0.6s ease-out' }}>
-        <Paper
-          elevation={0}
-          sx={{
-            p: 2,
-            background: 'rgba(255, 255, 255, 0.95)',
-            backdropFilter: 'blur(10px)',
-            borderRadius: 3,
-            boxShadow: '0 8px 32px rgba(0, 0, 0, 0.1)',
-          }}
-        >
-          <TextField
-            InputProps={{
-              startAdornment: (
-                <InputAdornment position="start">
-                  <SearchIcon sx={{ color: '#667eea' }} />
-                </InputAdornment>
-              ),
-            }}
-            placeholder="Search jobs by keyword, skills, or description..."
-            fullWidth
-            onChange={(e) => setQuery(e.target.value)}
-            sx={{
-              '& .MuiOutlinedInput-root': {
-                borderRadius: 2,
-                fontSize: '1rem',
-                '& fieldset': {
-                  borderColor: 'rgba(102, 126, 234, 0.3)',
-                },
-                '&:hover fieldset': {
-                  borderColor: 'rgba(102, 126, 234, 0.5)',
-                },
-                '&.Mui-focused fieldset': {
-                  borderColor: '#667eea',
-                },
-              },
-            }}
-          />
-        </Paper>
-      </Box>
+      <Paper
+        elevation={0}
+        sx={{
+          p: { xs: 4, md: 6 },
+          mb: 4,
+          background: 'linear-gradient(135deg, rgba(102, 126, 234, 0.12), rgba(118, 75, 162, 0.08))',
+          borderRadius: 4,
+          border: '1px solid rgba(102, 126, 234, 0.15)',
+          boxShadow: '0 16px 50px rgba(102, 126, 234, 0.08)',
+          animation: 'fadeIn 0.6s ease-out',
+        }}
+      >
+        <Grid container spacing={4} alignItems="center">
+          <Grid item xs={12} md={7}>
+            <Typography variant="h3" sx={{ fontWeight: 800, mb: 2, color: '#1e2549' }}>
+              Discover the latest openings, remote roles, and internship drives.
+            </Typography>
+            <Typography variant="body1" sx={{ color: '#444971', mb: 3, maxWidth: 620, lineHeight: 1.7 }}>
+              JobForMore gathers high-growth job postings, filtered company drives, and real application status updates for fresher-friendly roles.
+            </Typography>
+            <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 2 }}>
+              <Button
+                variant="contained"
+                onClick={() => setQuery('')}
+                sx={{ textTransform: 'none', py: 1.5, px: 3, borderRadius: 3 }}
+              >
+                Browse All Jobs
+              </Button>
+              <Button
+                variant="outlined"
+                onClick={() => {
+                  setQuery('');
+                  setSelectedCompany('');
+                  setSelectedLocation('');
+                  setSelectedCategory('');
+                }}
+                sx={{ textTransform: 'none', py: 1.5, px: 3, borderRadius: 3 }}
+              >
+                Reset Filters
+              </Button>
+            </Box>
+          </Grid>
+          <Grid item xs={12} md={5}>
+            <Paper
+              elevation={0}
+              sx={{
+                p: 3,
+                background: '#fff',
+                borderRadius: 4,
+                border: '1px solid rgba(0, 0, 0, 0.05)',
+              }}
+            >
+              <Typography variant="subtitle2" sx={{ color: '#667eea', mb: 2, fontWeight: 700 }}>
+                Fresh Jobs Update
+              </Typography>
+              <Typography variant="h5" sx={{ mb: 1.5, color: '#1a1a1a', fontWeight: 700 }}>
+                {jobs.length} open roles today
+              </Typography>
+              <Typography variant="body2" sx={{ color: '#5f6472', mb: 3 }}>
+                Explore the hottest job opportunities across content, engineering, sales, and technology.
+              </Typography>
+              <Grid container spacing={1}>
+                <Grid item xs={4}>
+                  <Paper sx={{ p: 2, borderRadius: 3, textAlign: 'center', background: '#f4f6ff' }}>
+                    <Typography variant="h6" sx={{ fontWeight: 700 }}>
+                      {featuredJobs.length}
+                    </Typography>
+                    <Typography variant="caption" sx={{ color: '#5f6472' }}>
+                      Featured
+                    </Typography>
+                  </Paper>
+                </Grid>
+                <Grid item xs={4}>
+                  <Paper sx={{ p: 2, borderRadius: 3, textAlign: 'center', background: '#f5f5f5' }}>
+                    <Typography variant="h6" sx={{ fontWeight: 700 }}>
+                      {savedJobs.length}
+                    </Typography>
+                    <Typography variant="caption" sx={{ color: '#5f6472' }}>
+                      Saved
+                    </Typography>
+                  </Paper>
+                </Grid>
+                <Grid item xs={4}>
+                  <Paper sx={{ p: 2, borderRadius: 3, textAlign: 'center', background: '#eef7f3' }}>
+                    <Typography variant="h6" sx={{ fontWeight: 700 }}>
+                      {topLocations.length}
+                    </Typography>
+                    <Typography variant="caption" sx={{ color: '#5f6472' }}>
+                      Locations
+                    </Typography>
+                  </Paper>
+                </Grid>
+              </Grid>
+            </Paper>
+          </Grid>
+        </Grid>
+      </Paper>
 
-      {post && post.length === 0 && (
-        <Box sx={{ textAlign: 'center', py: 8 }}>
-          <Typography variant="h5" sx={{ color: 'rgba(255, 255, 255, 0.9)', fontWeight: 600 }}>
-            No jobs found. Try a different search term.
+      {savedJobs.length > 0 && (
+        <Box id="saved-jobs" sx={{ mb: 4 }}>
+          <Typography variant="h5" sx={{ mb: 2, fontWeight: 700, color: '#1a1a1a' }}>
+            Saved Jobs
           </Typography>
+          <Grid container spacing={3}>
+            {savedJobs.slice(0, 3).map((job) => {
+              const location = extractJobLocation(job);
+              const salary = extractSalary(job);
+              return (
+                <Grid item xs={12} md={4} key={job.postId}>
+                  <Paper sx={{ p: 3, borderRadius: 3, border: '1px solid rgba(102, 126, 234, 0.12)' }}>
+                    <Typography variant="subtitle2" sx={{ color: '#667eea', mb: 1, fontWeight: 700 }}>
+                      Saved Role
+                    </Typography>
+                    <Typography variant="h6" sx={{ fontWeight: 700, mb: 0.5 }}>
+                      {job.postProfile}
+                    </Typography>
+                    <Typography variant="body2" sx={{ color: '#5f6472', mb: 1 }}>
+                      {job.companyName}
+                    </Typography>
+                    <Typography variant="body2" sx={{ color: '#4a4a4a', mb: 1 }}>
+                      {location || 'Remote'} • {salary || 'Salary not specified'}
+                    </Typography>
+                    <Button
+                      variant="text"
+                      onClick={() => navigate('/job-details', { state: { id: job.postId } })}
+                      sx={{ textTransform: 'none', color: '#667eea' }}
+                    >
+                      View details
+                    </Button>
+                  </Paper>
+                </Grid>
+              );
+            })}
+          </Grid>
         </Box>
       )}
 
-      <Grid container spacing={3}>
-        {post &&
-          post.map((p, index) => {
+      <Paper
+        elevation={0}
+        sx={{
+          mb: 4,
+          p: 3,
+          background: '#fff',
+          borderRadius: 3,
+          border: '1px solid rgba(0, 0, 0, 0.04)',
+        }}
+      >
+        <Typography variant="h6" sx={{ mb: 2, fontWeight: 700, color: '#1a1a1a' }}>
+          Filter by what matters most
+        </Typography>
+        <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1.5, mb: 2 }}>
+          {topCompanies.map((company) => (
+            <Chip
+              key={company}
+              label={company}
+              clickable
+              color={selectedCompany === company ? 'primary' : 'default'}
+              onClick={() => setSelectedCompany(selectedCompany === company ? '' : company)}
+            />
+          ))}
+        </Box>
+        <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1.5, mb: 2 }}>
+          {topLocations.map((location) => (
+            <Chip
+              key={location}
+              label={location}
+              clickable
+              color={selectedLocation === location ? 'primary' : 'default'}
+              onClick={() => setSelectedLocation(selectedLocation === location ? '' : location)}
+            />
+          ))}
+        </Box>
+        <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1.5 }}>
+          {topCategories.map((category) => (
+            <Chip
+              key={category}
+              label={category}
+              clickable
+              color={selectedCategory === category ? 'primary' : 'default'}
+              onClick={() => setSelectedCategory(selectedCategory === category ? '' : category)}
+            />
+          ))}
+        </Box>
+      </Paper>
+
+      {filteredJobs.length === 0 ? (
+        <Box sx={{ textAlign: 'center', py: 8 }}>
+          <Typography variant="h5" sx={{ color: '#1a1a1a', fontWeight: 600 }}>
+            No jobs found.
+          </Typography>
+          <Typography variant="body2" sx={{ color: '#5f6472', mt: 1 }}>
+            Try clearing filters or refining your search.
+          </Typography>
+        </Box>
+      ) : (
+        <Grid container spacing={3}>
+          {filteredJobs.map((p, index) => {
             // Parse job data for location and salary
             let jobLocation = '';
             let salary = '';
@@ -342,7 +593,7 @@ const handleEdit = (id) => {
                         }
                       />
                       {isAdmin() && (
-                        <Box sx={{ display: 'flex', gap: 0.5 }}>
+                        <Box sx={{ display: 'flex', gap: 0.5, alignItems: 'center' }}>
                           <IconButton
                             onClick={() => handleEdit(p.postId)}
                             size="small"
@@ -373,6 +624,28 @@ const handleEdit = (id) => {
                           </IconButton>
                         </Box>
                       )}
+                      <Button
+                        variant={isSaved(p.postId) ? 'contained' : 'outlined'}
+                        onClick={() => toggleSaveJob(p.postId)}
+                        size="small"
+                        sx={{
+                          textTransform: 'none',
+                          color: isSaved(p.postId) ? '#fff' : '#1976d2',
+                          borderColor: isSaved(p.postId) ? 'transparent' : '#1976d2',
+                          backgroundColor: isSaved(p.postId) ? '#1976d2' : 'transparent',
+                          fontSize: '0.75rem',
+                          fontWeight: 600,
+                          minWidth: 94,
+                          px: 1.5,
+                          py: 0.75,
+                          '&:hover': {
+                            backgroundColor: isSaved(p.postId) ? '#155fa0' : 'rgba(25, 118, 210, 0.08)',
+                            borderColor: isSaved(p.postId) ? 'transparent' : '#1976d2',
+                          },
+                        }}
+                      >
+                        {isSaved(p.postId) ? 'Saved' : 'Save'}
+                      </Button>
                     </Box>
                   </Box>
 
@@ -508,7 +781,8 @@ const handleEdit = (id) => {
               </Grid>
             );
           })}
-      </Grid>
+        </Grid>
+      )}
     </Container>
   )
 }

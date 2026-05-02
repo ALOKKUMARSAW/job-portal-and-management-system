@@ -1,6 +1,21 @@
 .App {
   min-height: 100vh;
   padding-bottom: 2rem;
+  background: radial-gradient(circle at top, rgba(102, 126, 234, 0.15), transparent 35%),
+              linear-gradient(180deg, #f4f6ff 0%, #ffffff 100%);
+}
+
+body {
+  background: #f4f6ff;
+  color: #1a1a1a;
+  font-family: 'Inter', 'Segoe UI', sans-serif;
+}
+
+button,
+input,
+textarea,
+select {
+  font-family: inherit;
 }
 
 @keyframes fadeIn {

@@ -41,7 +41,7 @@ const Navbar = () => {
                 textShadow: '0 2px 10px rgba(0, 0, 0, 0.2)',
               }}
             >
-              Job Portal
+              JobForMore
             </Typography>
           </Box>
 
@@ -69,6 +69,29 @@ const Navbar = () => {
               }}
             >
               Home
+            </Button>
+            <Button 
+              variant="contained"
+              onClick={() => window.location.hash = '#saved-jobs'}
+              sx={{
+                background: 'rgba(255, 255, 255, 0.18)',
+                color: '#fff',
+                fontWeight: 600,
+                px: 3,
+                py: 1,
+                borderRadius: 2,
+                textTransform: 'none',
+                fontSize: '0.95rem',
+                border: '1px solid rgba(255, 255, 255, 0.3)',
+                '&:hover': {
+                  background: 'rgba(255, 255, 255, 0.28)',
+                  transform: 'translateY(-2px)',
+                  boxShadow: '0 4px 12px rgba(0, 0, 0, 0.15)',
+                },
+                transition: 'all 0.3s ease',
+              }}
+            >
+              Saved Jobs
             </Button>
             {isAdmin() && (
               <Button 

@@ -39,8 +39,22 @@ const JobDetails = () => {
   const [applying, setApplying] = useState(false);
   const [applyMessage, setApplyMessage] = useState('');
   const [applyError, setApplyError] = useState('');
+  const [savedJobIds, setSavedJobIds] = useState(() => {
+    const saved = localStorage.getItem('savedJobs');
+    return saved ? JSON.parse(saved) : [];
+  });
   const jobId = location.state?.id;
   const { user, isAdmin } = useAuth();
+
+  const isSaved = (id) => savedJobIds.includes(id);
+
+  const toggleSaveJob = (id) => {
+    setSavedJobIds((prev) => {
+      const next = prev.includes(id) ? prev.filter((item) => item !== id) : [...prev, id];
+      localStorage.setItem('savedJobs', JSON.stringify(next));
+      return next;
+    });
+  };
 
   useEffect(() => {
     if (jobId) {
@@ -105,7 +119,7 @@ const JobDetails = () => {
     setApplyMessage('');
 
     try {
-      const response = await api.post(`/jobPost/${jobId}/apply`);
+      await api.post(`/jobPost/${jobId}/apply`);
       setApplyMessage('Application submitted successfully!');
       setTimeout(() => {
         navigate('/');
@@ -235,6 +249,33 @@ const JobDetails = () => {
                 Job ID: {job.postId}
               </Typography>
             </Box>
+          </Box>
+          <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 2, mt: 2 }}>
+            <Button
+              variant={isSaved(job.postId) ? 'contained' : 'outlined'}
+              onClick={() => toggleSaveJob(job.postId)}
+              sx={{
+                textTransform: 'none',
+                fontWeight: 600,
+                borderRadius: 2,
+                px: 3,
+                py: 1,
+              }}
+            >
+              {isSaved(job.postId) ? 'Saved to Alerts' : 'Save Job'}
+            </Button>
+            <Button
+              variant="outlined"
+              onClick={() => navigate('/')}
+              sx={{
+                textTransform: 'none',
+                borderRadius: 2,
+                px: 3,
+                py: 1,
+              }}
+            >
+              Browse Matching Roles
+            </Button>
           </Box>
         </Box>
 
