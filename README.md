@@ -32,7 +32,7 @@ The application provides separate **User** and **Admin** modules with secure aut
 ![Home Page](images/home-page.png)
 
 ### 🔐 Login Page
-![Login Page](images/login-page.png)
+![Login Page](image/login-page.png)
 
 ### 📝 Register Page
 ![Register Page](images/register-page.png)
