@@ -29,7 +29,7 @@ The application provides separate **User** and **Admin** modules with secure aut
 # 📸 Screenshots
 
 ### 🏠 Home Page
-![Home Page](images/home-page.png)
+![Home Page](Image/home-page.png)
 
 ### 🔐 Login Page
 ![Login Page](image/login-page.png)
