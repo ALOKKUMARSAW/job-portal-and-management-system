@@ -32,34 +32,34 @@ The application provides separate **User** and **Admin** modules with secure aut
 ![Home Page](Image/home-page.png)
 
 ### 🔐 Login Page
-![Login Page](image/login-page.png)
+![Login Page](Image/login-page.png)
 
 ### 📝 Register Page
-![Register Page](images/register-page.png)
+![Register Page](Image/register-page.png)
 
 ### 👤 User Dashboard
-![User Dashboard](images/user-dashboard.png)
+![User Dashboard](Image/user-dashboard.png)
 
 ### 👨‍💼 Admin Dashboard
-![Admin Dashboard](images/admin-dashboard.png)
+![Admin Dashboard](Image/admin-dashboard.png)
 
 ### ➕ Admin Add Job - Step 1
-![Admin Add Job 1](images/admin-add-job-1.png)
+![Admin Add Job 1](Image/admin-add-job-1.png)
 
 ### ➕ Admin Add Job - Step 2
-![Admin Add Job 2](images/admin-add-job-2.png)
+![Admin Add Job 2](Image/admin-add-job-2.png)
 
 ### ➕ Admin Add Job - Step 3
-![Admin Add Job 3](images/admin-add-job-3.png)
+![Admin Add Job 3](Image/admin-add-job-3.png)
 
 ### ➕ Admin Add Job - Step 4
-![Admin Add Job 4](images/admin-add-job-4.png)
+![Admin Add Job 4](Image/admin-add-job-4.png)
 
 ### 💾 Save Job Page
-![Save Job](images/save-job.png)
+![Save Job](Image/save-job.png)
 
 ### 📧 Application Email Notification
-![Application Mail](images/application-mail.png)
+![Application Mail](Image/application-mail.png)
 
 ---
 
