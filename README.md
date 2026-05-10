@@ -1,227 +1,350 @@
 # JobApplication - Job Portal System
 
-A full-stack job portal application with User and Admin modules, featuring job posting, application management, and role-based access control.
+A full-stack Job Portal and Management System built using **Spring Boot** and **React.js**.  
+The application provides separate **User** and **Admin** modules with secure authentication, job posting management, and application tracking.
 
-## Features
+---
 
-### User Module
+# 🚀 Features
+
+## 👤 User Module
 - ✅ User Registration and Login
 - ✅ Browse and Search Jobs
 - ✅ View Job Details
 - ✅ Apply for Jobs
+- ✅ JWT-Based Authentication
+- ✅ Responsive User Interface
 
-### Admin Module
+## 👨‍💼 Admin Module
 - ✅ Admin Registration and Login
 - ✅ Add New Job Postings
 - ✅ Update Existing Jobs
 - ✅ Delete Job Postings
 - ✅ View All Applications
 - ✅ Manage Applications
+- ✅ Role-Based Access Control
 
-## Tech Stack
+---
 
-### Backend
-- **Framework**: Spring Boot 3.2.12
-- **Language**: Java 21
-- **Database**: MySQL
-- **ORM**: JPA/Hibernate
-- **Security**: Spring Security with JWT
-- **Email**: Spring Boot Mail Starter
-- **Utilities**: Lombok
-- **Package**: `com.alok.jobApplication`
+# 📸 Screenshots
 
-### Frontend
-- **Framework**: React 18.2.0
-- **UI Library**: Material-UI (MUI) 5.15.0
-- **HTTP Client**: Axios
-- **Routing**: React Router DOM 6.21.0
-- **Animations**: React TSParticles
+### 🏠 Home Page
+![Home Page](images/home-page.png)
 
-## Prerequisites
+### 🔐 Login Page
+![Login Page](images/login-page.png)
+
+### 📝 Register Page
+![Register Page](images/register-page.png)
+
+### 👤 User Dashboard
+![User Dashboard](images/user-dashboard.png)
+
+### 👨‍💼 Admin Dashboard
+![Admin Dashboard](images/admin-dashboard.png)
+
+### ➕ Admin Add Job - Step 1
+![Admin Add Job 1](images/admin-add-job-1.png)
+
+### ➕ Admin Add Job - Step 2
+![Admin Add Job 2](images/admin-add-job-2.png)
+
+### ➕ Admin Add Job - Step 3
+![Admin Add Job 3](images/admin-add-job-3.png)
+
+### ➕ Admin Add Job - Step 4
+![Admin Add Job 4](images/admin-add-job-4.png)
+
+### 💾 Save Job Page
+![Save Job](images/save-job.png)
+
+### 📧 Application Email Notification
+![Application Mail](images/application-mail.png)
+
+---
+
+# 🛠️ Tech Stack
+
+## Backend
+- **Framework:** Spring Boot 3.2.12
+- **Language:** Java 21
+- **Database:** MySQL
+- **ORM:** JPA/Hibernate
+- **Security:** Spring Security with JWT
+- **Email:** Spring Boot Mail Starter
+- **Utilities:** Lombok
+- **Package:** `com.alok.jobApplication`
+
+## Frontend
+- **Framework:** React 18.2.0
+- **UI Library:** Material-UI (MUI) 5.15.0
+- **HTTP Client:** Axios
+- **Routing:** React Router DOM 6.21.0
+- **Animations:** React TSParticles
+
+---
+
+# 📋 Prerequisites
 
 - Java 21 or higher
 - Maven 3.6+
 - Node.js 16+ and npm
 - MySQL 8.0+
-- IDE (IntelliJ IDEA, Eclipse, or VS Code)
+- IntelliJ IDEA / Eclipse / VS Code
 
-## Database Setup
+---
 
-1. Create a MySQL database:
+# 🗄️ Database Setup
+
+Create a MySQL database:
+
 ```sql
 CREATE DATABASE jobapp;
 ```
 
-2. Update database credentials in `Backend-SpringBoot/src/main/resources/application.properties`:
+Update database credentials in:
+
+```properties
+Backend-SpringBoot/src/main/resources/application.properties
+```
+
 ```properties
 spring.datasource.url=jdbc:mysql://localhost:3306/jobapp?useSSL=false&allowPublicKeyRetrieval=true
 spring.datasource.username=root
 spring.datasource.password=YOUR_PASSWORD
 ```
 
-## Backend Setup
+---
 
-1. Navigate to the backend directory:
+# ⚙️ Backend Setup
+
+Navigate to backend directory:
+
 ```bash
 cd Backend-SpringBoot
 ```
 
-2. Build the project:
+Build the project:
+
 ```bash
 mvn clean install
 ```
 
-3. Run the Spring Boot application:
+Run the Spring Boot application:
+
 ```bash
 mvn spring-boot:run
 ```
 
-The backend will start on `http://localhost:8080`
+Backend runs on:
 
-### Backend API Endpoints
+```bash
+http://localhost:8080
+```
 
-#### Authentication
-- `POST /auth/register` - Register new user/admin
-- `POST /auth/login` - Login user/admin
+---
 
-#### Jobs (Public)
-- `GET /jobPosts` - Get all jobs
-- `GET /jobPost/{postId}` - Get job by ID
-- `GET /jobPosts/keyword/{keyword}` - Search jobs by keyword
+# 💻 Frontend Setup
 
-#### Jobs (Admin Only)
-- `POST /jobPost` - Create new job (requires ADMIN role)
-- `PUT /jobPost` - Update job (requires ADMIN role)
-- `DELETE /jobPost/{postId}` - Delete job (requires ADMIN role)
+Navigate to frontend directory:
 
-#### Job Applications (User)
-- `POST /jobPost/{postId}/apply` - Apply for a job (requires USER role, header: `X-User-Id`)
-
-#### Job Applications (Admin)
-- `GET /applications` - Get all applications (requires ADMIN role)
-- `GET /applications/job/{jobId}` - Get applications for a job (requires ADMIN role)
-- `GET /applications/user/{userId}` - Get applications by user (requires ADMIN role)
-- `PUT /applications/{applicationId}/status` - Update application status (requires ADMIN role)
-
-## Frontend Setup
-
-1. Navigate to the frontend directory:
 ```bash
 cd Frontend-React
 ```
 
-2. Install dependencies:
+Install dependencies:
+
 ```bash
 npm install
 ```
 
-3. Start the development server:
+Run the React application:
+
 ```bash
 npm start
 ```
 
-The frontend will start on `http://localhost:3000`
+Frontend runs on:
 
-## Usage
-
-### For Users
-
-1. **Register**: Click "Register" in the navbar, fill in your details, and select "User" role
-2. **Login**: Click "Login" and enter your credentials
-3. **Browse Jobs**: View all available jobs on the home page
-4. **Search**: Use the search bar to find jobs by keyword
-5. **View Details**: Click "Check Details" on any job card
-6. **Apply**: Click "Apply for this Job" button on the job details page
-
-### For Admins
-
-1. **Register**: Click "Register" in the navbar, fill in your details, and select "Admin" role
-2. **Login**: Click "Login" and enter your credentials
-3. **Add Job**: Click "Add Job" button in the navbar (only visible to admins)
-4. **Edit Job**: Click the edit icon on any job card (only visible to admins)
-5. **Delete Job**: Click the delete icon on any job card (only visible to admins)
-6. **View Applications**: Access application management through admin endpoints
-
-## Default Credentials
-
-You can register new users/admins through the registration page. The first admin account should be created manually or through the registration form.
-
-## Project Structure
-
+```bash
+http://localhost:3000
 ```
+
+---
+
+# 🔐 Backend API Endpoints
+
+## Authentication
+```http
+POST /auth/register
+POST /auth/login
+```
+
+## Jobs (Public)
+```http
+GET /jobPosts
+GET /jobPost/{postId}
+GET /jobPosts/keyword/{keyword}
+```
+
+## Jobs (Admin Only)
+```http
+POST /jobPost
+PUT /jobPost
+DELETE /jobPost/{postId}
+```
+
+## Job Applications (User)
+```http
+POST /jobPost/{postId}/apply
+```
+
+## Job Applications (Admin)
+```http
+GET /applications
+GET /applications/job/{jobId}
+GET /applications/user/{userId}
+PUT /applications/{applicationId}/status
+```
+
+---
+
+# 👨‍💻 Usage
+
+## For Users
+1. Register a new account
+2. Login using credentials
+3. Browse available jobs
+4. Search jobs using keywords
+5. View detailed job descriptions
+6. Apply for jobs
+
+## For Admins
+1. Register/Login as Admin
+2. Add new jobs
+3. Edit existing jobs
+4. Delete job postings
+5. View all applications
+6. Manage candidate applications
+
+---
+
+📂 Project Structure
+
+```bash
 job-portal-and-management-system/
-├── Backend-SpringBoot/          # Backend (Spring Boot)
+│
+├── images/                         # Project screenshots
+│   ├── home-page.png
+│   ├── login-page.png
+│   ├── register-page.png
+│   ├── user-dashboard.png
+│   ├── admin-dashboard.png
+│   ├── admin-add-job-1.png
+│   ├── admin-add-job-2.png
+│   ├── admin-add-job-3.png
+│   ├── admin-add-job-4.png
+│   ├── save-job.png
+│   └── application-mail.png
+│
+├── Backend-SpringBoot/             # Spring Boot Backend
 │   ├── src/
 │   │   └── main/
 │   │       ├── java/
-│   │       │   └── com/
-│   │       │       └── alok/
-│   │       │           └── jobApplication/
-│   │       │               ├── config/      # CORS and security configuration
-│   │       │               ├── controller/  # REST controllers
-│   │       │               ├── enums/       # Application enums
-│   │       │               ├── filter/      # JWT authentication filter
-│   │       │               ├── model/       # Entity models
-│   │       │               ├── repo/        # JPA repositories
-│   │       │               ├── service/     # Business logic
-│   │       │               └── util/        # Utility classes
+│   │       │   └── com/alok/jobApplication/
+│   │       │       ├── config/
+│   │       │       ├── controller/
+│   │       │       ├── enums/
+│   │       │       ├── filter/
+│   │       │       ├── model/
+│   │       │       ├── repo/
+│   │       │       ├── service/
+│   │       │       └── util/
+│   │       │
 │   │       └── resources/
 │   │           └── application.properties
+│   │
 │   └── pom.xml
 │
-└── Frontend-React/              # Frontend (React)
-    ├── src/
-    │   ├── components/         # React components
-    │   ├── context/            # React context
-    │   └── App.js
-    └── package.json
-```
+├── Frontend-React/                 # React Frontend
+│   ├── public/
+│   ├── src/
+│   │   ├── components/
+│   │   ├── context/
+│   │   ├── services/
+│   │   ├── pages/
+│   │   └── App.js
+│   │
+│   └── package.json
+│
+└── README.md
 
-## Key Features Implementation
+# 🔑 Key Features Implementation
 
-### Authentication & Authorization
-- JWT-based authentication using Spring Security
-- Role-based access control (USER/ADMIN)
-- Protected routes for admin-only pages
-- JWT token validation and expiration handling
+## Authentication & Authorization
+- JWT-Based Authentication
+- Spring Security Integration
+- Role-Based Access Control
+- Protected Admin Routes
+- Token Validation & Expiration Handling
 
-### Job Management
-- Full CRUD operations for jobs
-- Rich job details with structured data
-- Search functionality
-- Registration status and countdown timers
+## Job Management
+- Full CRUD Operations
+- Dynamic Job Details
+- Search Functionality
+- Registration Status Handling
 
-### Application Management
+## Application Management
 - Users can apply for jobs
-- Admins can view and manage all applications
+- Admins can manage all applications
 - Application status tracking
 
-## Troubleshooting
+---
 
-### Backend Issues
-- Ensure MySQL is running and database is created
-- Check database credentials in `application.properties`
-- Verify Java 21 is installed: `java -version`
-- Check port 8080 is not in use
+# 🛠️ Troubleshooting
 
-### Frontend Issues
-- Clear node_modules and reinstall: `rm -rf node_modules && npm install`
-- Check if backend is running on port 8080
-- Verify CORS configuration allows `http://localhost:3000`
+## Backend Issues
+- Ensure MySQL is running
+- Verify database credentials
+- Check Java version:
 
-## Notes
+```bash
+java -version
+```
 
-- The application uses JPA `ddl-auto=update` which automatically creates/updates database tables
-- JWT tokens are used for authentication and stored in browser localStorage
-- Admin routes are protected and redirect non-admin users
-- Job application requires user to be logged in
-- Email functionality is available for notifications (Spring Boot Mail)
+- Ensure port `8080` is free
 
-## License
+## Frontend Issues
 
-This project is part of the JobApplication system.
+Clear dependencies and reinstall:
 
-## Contact
+```bash
+rm -rf node_modules
+npm install
+```
 
-For issues or questions, please contact the development team.
+Verify:
+- Backend is running on port `8080`
+- CORS allows `http://localhost:3000`
 
+---
+
+# 📝 Notes
+
+- Uses `spring.jpa.hibernate.ddl-auto=update`
+- JWT tokens stored in browser localStorage
+- Admin routes are protected
+- Email notifications supported
+- Responsive UI for desktop and mobile
+
+---
+
+# 📄 License
+
+This project is developed for learning and portfolio purposes.
+
+---
+
+# 📬 Contact
+
+For issues or suggestions, feel free to connect.
